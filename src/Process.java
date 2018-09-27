@@ -1,6 +1,6 @@
 
 class Process {
-	private int processNum;
+	private String processNum;
 	private int arrivalTime;
 	private int burstTime;
 	private int priority;
@@ -9,18 +9,18 @@ class Process {
 		
 	}
 	
-	public Process(int n, int a, int b, int p) {
+	public Process(String n, int a, int b, int p) {
 		this.processNum = n;
 		this.arrivalTime = a;
 		this.burstTime = b;
 		this.priority = p;
 	}
 	
-	public int getProcessNum() {
+	public String getProcessNum() {
 		return processNum;
 	}
 	
-	public void setProcessNum(int n) {
+	public void setProcessNum(String n) {
 		this.processNum = n;
 	}
 	
