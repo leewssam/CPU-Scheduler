@@ -45,11 +45,10 @@ public class OperatingSystem {
                 System.out.println();
             } while (inputPriority < 1 || inputPriority > 6);
 
-            String processNumToString = Integer.toString(i);
-            processList.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
-            processListR.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
-            processListS.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
-            processListT.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
+            processList.add(new Process(i, inputArrivalTime, inputBurstTime, inputPriority));
+            processListR.add(new Process(i, inputArrivalTime, inputBurstTime, inputPriority));
+            processListS.add(new Process(i, inputArrivalTime, inputBurstTime, inputPriority));
+            processListT.add(new Process(i, inputArrivalTime, inputBurstTime, inputPriority));
             displayTable(processList);
             System.out.println();
         }
@@ -69,7 +68,7 @@ public class OperatingSystem {
         System.out.println("| Process | Burst Time | Arrival Time | Priority |");
         System.out.println("|---------+------------+--------------+----------|");
 
-        for (int i = 0; i < t.size(); i++) { 
+        for (int i = 0; i < t.size(); i++) {
 
             //make up spaces for process
             System.out.format("| %-8s", "P" + t.get(i).getProcessNum());
@@ -98,39 +97,13 @@ public class OperatingSystem {
             for (int j = 0; j < space; j++) {
                 System.out.print("-");
             }
-            
-            if(i < g.size()-1) {
-                if(g.get(i).getProcessNum().equals("empty") && g.get(i+1).getProcessNum().equals("empty")) {
-                    System.out.print("-");
-                }
-                else {
-                    System.out.print("+");
-                }
-            }
+            System.out.print("+");
         }
-        System.out.print("+");
         System.out.println();
-        
-        System.out.print("|");
+
         for (int i = 0; i < g.size(); i++) {
             int space = g.get(i).getBurstTime() + 1;
-            
-            if(g.get(i).getProcessNum().equals("empty")) {
-                System.out.format((" %-" + space + "s "), " ");
-            }
-            else {
-                System.out.format((" %-" + space + "s "), "P" + g.get(i).getProcessNum());
-            }
-            
-            if(i < g.size()-1) {
-                if(g.get(i).getProcessNum().equals("empty") && g.get(i+1).getProcessNum().equals("empty")) {
-                    System.out.print(" ");
-                }
-                else {
-                    System.out.print("|");
-                }
-            }
-            
+            System.out.format(("| %-" + space + "s "), "P" + g.get(i).getProcessNum());
         }
         System.out.print("|");
         System.out.println();
@@ -141,33 +114,15 @@ public class OperatingSystem {
             for (int j = 0; j < space; j++) {
                 System.out.print("-");
             }
-            
-            if(i < g.size()-1) {
-                if(g.get(i).getProcessNum().equals("empty") && g.get(i+1).getProcessNum().equals("empty")) {
-                    System.out.print("-");
-                }
-                else {
-                    System.out.print("+");
-                }
-            }
+            System.out.print("+");
         }
-        System.out.print("+");
         System.out.println();
 
         for (int i = 0; i < t.size(); i++) {
             if (i < t.size() - 1) {
                 int space = g.get(i).getBurstTime() + 4;
-                if(i == 0) {
-                    System.out.format(("%-" + space + "s"), t.get(i));
-                }
-                else if(g.get(i-1).getProcessNum().equals("empty") && g.get(i).getProcessNum().equals("empty")) {
-                    System.out.format(("%-" + space + "s"), " ");
-                }
-                else {
-                    System.out.format(("%-" + space + "s"), t.get(i));
-                } 
-            } 
-            else {
+                System.out.format(("%-" + space + "s"), t.get(i));
+            } else {
                 System.out.print(t.get(i));
             }
         }
@@ -190,7 +145,6 @@ public class OperatingSystem {
         int currenttime = 0;
         do {
             timeline.add(currenttime);
-			
             if (currentProcess.getBurstTime() <= rrmax) {
                 currenttime = currenttime + currentProcess.getBurstTime();
                 ganttChart.add(currentProcess);
@@ -199,8 +153,7 @@ public class OperatingSystem {
                 } else if (queue.size() > 0) {
                     queue.remove(0);
                 }
-            } 
-			else {
+            } else {
                 currenttime = currenttime + rrmax;
                 Process executedProcess = new Process();
                 Process leftProcess = new Process();
@@ -219,6 +172,7 @@ public class OperatingSystem {
 
                 if (leftProcess.getBurstTime() > 0) {
                     queue.add(leftProcess);
+
                 }
 
                 if (processListR.get(0).getProcessNum() == currentProcess.getProcessNum()) {
@@ -226,41 +180,158 @@ public class OperatingSystem {
                 } else {
                     queue.remove(0);
                 }
-            }
-			for (int i=processListR.size()-1; i>=0;i--)
+            }//end of else
+            if (queue.size() > 0 && processListR.size() > 0) 
 			{
-				if (processListR.get(i).getArrivalTime()<currenttime)
-				{
-					queue.add(processListR.get(i));
-					processListR.remove(i);
-				}
-			}
-			
-            if (queue.size() > 0) 
-            {
                 Collections.sort(queue, new CompareByPriority()); //sort prcoessList by arrivaltime first then only priority
+				if (processListR.get(0).getArrivalTime()<=currenttime)
+				{
+					if (queue.get(0).getPriority() < processListR.get(0).getPriority()) 
+					{
+						timeline.add(currenttime);
+						if (queue.get(0).getBurstTime() <= rrmax) {
+							currenttime = queue.get(0).getBurstTime() + currenttime;
+							ganttChart.add(queue.get(0));
+						} else {
+							Process executedProcess = new Process();
+							Process leftProcess = new Process();
+
+							currenttime = currenttime + rrmax;
+							executedProcess.setProcessNum(queue.get(0).getProcessNum());
+							executedProcess.setArrivalTime(queue.get(0).getArrivalTime());
+							executedProcess.setPriority(queue.get(0).getPriority());
+							executedProcess.setBurstTime(rrmax);
+							ganttChart.add(executedProcess);
+
+							leftProcess.setProcessNum(queue.get(0).getProcessNum());
+							leftProcess.setArrivalTime(currenttime);
+							leftProcess.setPriority(queue.get(0).getPriority());
+							leftProcess.setBurstTime(queue.get(0).getBurstTime() - rrmax);
+							queue.add(leftProcess);
+						}
+						queue.remove(0);
+						if (queue.size() >= 1) {
+							if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+								if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+									currentProcess = processListR.get(0);
+								} else {
+									currentProcess = queue.get(0);
+								}
+							} else if (queue.get(0).getArrivalTime() <= currenttime) {
+								currentProcess = queue.get(0);
+							}
+						} else {
+							currentProcess = processListR.get(0);
+						}
+					} 
+					else if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) 
+					{
+						timeline.add(currenttime);
+						if (processListR.get(0).getBurstTime() <= rrmax) 
+						{
+							currenttime = processListR.get(0).getBurstTime() + currenttime;
+							ganttChart.add(processListR.get(0));
+							processListR.remove(0);
+						} else 
+						{
+							Process executedProcess = new Process();
+							Process leftProcess = new Process();
+
+							currenttime = currenttime + rrmax;
+							executedProcess.setProcessNum(processListR.get(0).getProcessNum());
+							executedProcess.setArrivalTime(processListR.get(0).getArrivalTime());
+							executedProcess.setPriority(processListR.get(0).getPriority());
+							executedProcess.setBurstTime(rrmax);
+							ganttChart.add(executedProcess);
+
+							leftProcess.setProcessNum(processListR.get(0).getProcessNum());
+							leftProcess.setArrivalTime(currenttime);
+							leftProcess.setPriority(processListR.get(0).getPriority());
+							leftProcess.setBurstTime(processListR.get(0).getBurstTime() - rrmax);
+							processListR.remove(0);
+							queue.add(leftProcess);
+						}
+						if (queue.size() >= 1 && processListR.size() >= 1) 
+						{
+							Collections.sort(queue, new CompareByPriority()); //sort prcoessList by arrivaltime first then only priority
+							if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+								if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+									currentProcess = processListR.get(0);
+								} else 
+								{
+
+									currentProcess = queue.get(0);
+								}
+							} 
+							else if (queue.get(0).getArrivalTime() <= currenttime) 
+							{
+								currentProcess = queue.get(0);
+							}
+						} 
+						else if (queue.size() > 0 && processListR.size() == 0) 
+						{
+							currentProcess = queue.get(0);
+						} 
+						else {
+							currentProcess = processListR.get(0);
+						}
+					}
+				}
+				else{
+					timeline.add(currenttime);
+					if (queue.get(0).getBurstTime() <= rrmax) {
+						currenttime = queue.get(0).getBurstTime() + currenttime;
+						ganttChart.add(queue.get(0));
+					} 
+					
+					else 
+					{
+						Process executedProcess = new Process();
+						Process leftProcess = new Process();
+
+						currenttime = currenttime + rrmax;
+						executedProcess.setProcessNum(queue.get(0).getProcessNum());
+						executedProcess.setArrivalTime(queue.get(0).getArrivalTime());
+						executedProcess.setPriority(queue.get(0).getPriority());
+						executedProcess.setBurstTime(rrmax);
+						ganttChart.add(executedProcess);
+
+						leftProcess.setProcessNum(queue.get(0).getProcessNum());
+						leftProcess.setArrivalTime(currenttime);
+						leftProcess.setPriority(queue.get(0).getPriority());
+						leftProcess.setBurstTime(queue.get(0).getBurstTime() - rrmax);
+						queue.add(leftProcess);
+					}
+					queue.remove(0);
+					if (queue.size() >= 1) {
+						if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+							if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+								currentProcess = processListR.get(0);
+							} else {
+								currentProcess = queue.get(0);
+							}
+						} else if (queue.get(0).getArrivalTime() <= currenttime) {
+							currentProcess = queue.get(0);
+						}
+					} else {
+						currentProcess = processListR.get(0);
+					}
+				}
 				
-            } 
-			if (queue.size() == 0 && processListR.size() > 0) {
+            } else if (queue.size() == 0 && processListR.size() > 0) {
                 currentProcess = processListR.get(0);
             }
-			
-			else if (queue.size()>0 && processListR.size()>0){
-				currentProcess = queue.get(0);
-			}
         } while (processListR.size() > 0);
         //displayTable(processListR);
         Collections.sort(queue, new CompareByPriority());
 		if (queue.size() >0)
 		{
         do {
-			
             timeline.add(currenttime);
             if (queue.get(0).getBurstTime() <= rrmax) {
                 currenttime = queue.get(0).getBurstTime() + currenttime;
                 ganttChart.add(queue.get(0));
                 queue.remove(0);
-				Collections.sort(queue, new CompareByPriority());
             } else {
                 Process executedProcess = new Process();
                 Process leftProcess = new Process();
@@ -279,7 +350,6 @@ public class OperatingSystem {
 
                 queue.add(leftProcess);
                 queue.remove(0);
-				Collections.sort(queue, new CompareByPriority());
 			}
         } while (queue.size() != 0);
 		}
@@ -548,10 +618,7 @@ public class OperatingSystem {
         ArrayList<Process> Queue2 = new ArrayList<Process>();
         ArrayList<Process> Queue3 = new ArrayList<Process>();
 
-        ArrayList<Process> ganttChart1 = new ArrayList<Process>();
-        ArrayList<Process> ganttChart2 = new ArrayList<Process>();
-        ArrayList<Process> ganttChart3 = new ArrayList<Process>();
-
+        ArrayList<Process> ganttChart = new ArrayList<Process>();
 
         for (int i = 0; i < ProcessListT.size(); i++) {
             if (ProcessListT.get(i).getPriority() == 1 || ProcessListT.get(i).getPriority() == 2) {
@@ -571,34 +638,24 @@ public class OperatingSystem {
         Process minArrival = ProcessListT.get(0);
         
         Process workingProcess = minArrival;
-        ArrayList<Integer> timeline1 = new ArrayList<Integer>();
-        ArrayList<Integer> timeline2 = new ArrayList<Integer>();
-        ArrayList<Integer> timeline3 = new ArrayList<Integer>();
+        ArrayList<Integer> timeline = new ArrayList<Integer>();
         int QTime = TimeQuantum;
         int currentTime = workingProcess.getArrivalTime();
-        timeline1.add(currentTime);
-        timeline2.add(currentTime);
-        timeline3.add(currentTime);
-
+        timeline.add(currentTime);
         
         if(Queue1.contains(workingProcess)) {
-            changeQueue1(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue1(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
         }
         else if(Queue2.contains(workingProcess)) {
-            changeQueue2(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue2(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
         }
         else if(Queue3.contains(workingProcess)) {
-            changeQueue3(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue3(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
         }
         
     }
     
-    public static Process createEmptyProcess(Process p) {
-        Process newP = new Process("empty", p.getArrivalTime(), p.getBurstTime(), p.getPriority());
-        return newP;
-    }
-    
-    public static void changeQueue1(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart1, ArrayList<Process> ganttChart2, ArrayList<Process> ganttChart3, ArrayList<Integer> timeline1, ArrayList<Integer> timeline2, ArrayList<Integer> timeline3, int currentTime, int QTime, Process workingProcess) {
+    public static void changeQueue1(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart, ArrayList<Integer> timeline, int currentTime, int QTime, Process workingProcess) {
         ArrayList<Process> Queue = new ArrayList<Process>();
         while (Queue1.size() != 0 && Queue1.get(0).getArrivalTime() <= currentTime) {
             if(Queue.size() > 0) {
@@ -617,14 +674,9 @@ public class OperatingSystem {
             }
 
             if (workingProcess.getBurstTime() <= QTime) {
-                Process empty = createEmptyProcess(workingProcess);
-                ganttChart1.add(workingProcess);
-                ganttChart2.add(empty);
-                ganttChart3.add(empty);
+                ganttChart.add(workingProcess);
                 currentTime += workingProcess.getBurstTime();
-                timeline1.add(currentTime);
-                timeline2.add(currentTime);
-                timeline3.add(currentTime);
+                timeline.add(currentTime);
             } else {
                 Process executedProcess = new Process();
                 Process leftProcess = new Process();
@@ -634,14 +686,9 @@ public class OperatingSystem {
                 executedProcess.setProcessNum(workingProcess.getProcessNum());
                 executedProcess.setBurstTime(QTime);
                 
-                Process empty = createEmptyProcess(executedProcess);
-                ganttChart2.add(empty);
-                ganttChart3.add(empty);
-                ganttChart1.add(executedProcess);
+                ganttChart.add(executedProcess);
                 currentTime = currentTime + QTime;
-                timeline1.add(currentTime);
-                timeline2.add(currentTime);
-                timeline3.add(currentTime);
+                timeline.add(currentTime);
 
                 leftProcess.setArrivalTime(workingProcess.getArrivalTime());
                 leftProcess.setPriority(workingProcess.getPriority());
@@ -659,14 +706,9 @@ public class OperatingSystem {
             workingProcess = Queue.get(0);
             
             if (workingProcess.getBurstTime() <= QTime) {
-                Process empty = createEmptyProcess(workingProcess);
-                ganttChart1.add(workingProcess);
-                ganttChart2.add(empty);
-                ganttChart3.add(empty);
+                ganttChart.add(workingProcess);
                 currentTime += workingProcess.getBurstTime();
-                timeline1.add(currentTime);
-                timeline2.add(currentTime);
-                timeline3.add(currentTime);
+                timeline.add(currentTime);
                 Queue.remove(workingProcess);
             
             } else {
@@ -678,15 +720,9 @@ public class OperatingSystem {
                 executedProcess.setProcessNum(workingProcess.getProcessNum());
                 executedProcess.setBurstTime(QTime);
                 
-                Process empty = createEmptyProcess(executedProcess);
-                ganttChart1.add(executedProcess);
-                ganttChart2.add(empty);
-                ganttChart3.add(empty);
-
+                ganttChart.add(executedProcess);
                 currentTime = currentTime + QTime;
-                timeline1.add(currentTime);
-                timeline2.add(currentTime);
-                timeline3.add(currentTime);
+                timeline.add(currentTime);
                 Queue.remove(workingProcess);
     
                 leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -700,16 +736,16 @@ public class OperatingSystem {
             }//End of Round Robin
         }
         
-        changeQueue2(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+        changeQueue2(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
     }
     
-    public static void changeQueue2(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart1, ArrayList<Process> ganttChart2, ArrayList<Process> ganttChart3, ArrayList<Integer> timeline1, ArrayList<Integer> timeline2, ArrayList<Integer> timeline3, int currentTime, int QTime, Process workingProcess) {
+    public static void changeQueue2(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart, ArrayList<Integer> timeline, int currentTime, int QTime, Process workingProcess) {
         if(Queue2.size() == 0) {
-            changeQueue3(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue3(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
         }
         else {
             if(Queue2.get(0).getArrivalTime() > currentTime){
-                changeQueue3(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+                changeQueue3(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
             }
             else {
                 if(Queue1.size() == 0) {
@@ -718,18 +754,11 @@ public class OperatingSystem {
                     while (Queue2Iterator.hasNext()) {
                         Process p = Queue2Iterator.next();
                         currentTime += p.getBurstTime();
-                        
-                        Process empty = createEmptyProcess(p);
-                        ganttChart1.add(empty);
-                        ganttChart3.add(empty);
-                        ganttChart2.add(p);
-                        
-                        timeline1.add(currentTime);
-                        timeline2.add(currentTime);
-                        timeline3.add(currentTime);
+                        ganttChart.add(p);
+                        timeline.add(currentTime);
                         Queue2Iterator.remove();
                     }
-                    changeQueue3(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+                    changeQueue3(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
                 }
                 else {
                     //need cautious of preemptive
@@ -740,14 +769,9 @@ public class OperatingSystem {
                         workingProcess = Queue2Iterator.next();
                     
                         if((currentTime + workingProcess.getBurstTime()) < cutLineQueue1.getArrivalTime()) {
-                            Process empty = createEmptyProcess(workingProcess);
-                            ganttChart1.add(empty);
-                            ganttChart3.add(empty);
-                            ganttChart2.add(workingProcess);
+                            ganttChart.add(workingProcess);
                             currentTime += workingProcess.getBurstTime();
-                            timeline1.add(currentTime);
-                            timeline2.add(currentTime);
-                            timeline3.add(currentTime);
+                            timeline.add(currentTime);
                             Queue2Iterator.remove();
                         }
                         else {
@@ -759,14 +783,9 @@ public class OperatingSystem {
                             executedProcess.setProcessNum(workingProcess.getProcessNum());
                             executedProcess.setBurstTime(cutLineQueue1.getArrivalTime() - currentTime);
 
-                            Process empty = createEmptyProcess(executedProcess);
-                            ganttChart1.add(empty);
-                            ganttChart3.add(empty);
-                            ganttChart2.add(executedProcess);
+                            ganttChart.add(executedProcess);
                             currentTime = currentTime + executedProcess.getBurstTime();
-                            timeline1.add(currentTime);
-                            timeline2.add(currentTime);
-                            timeline3.add(currentTime);
+                            timeline.add(currentTime);
                             Queue2.remove(workingProcess);
 
                             leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -783,39 +802,28 @@ public class OperatingSystem {
 
                     Collections.sort(Queue2, new CompareByArrivalTime());
 
-                    changeQueue1(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+                    changeQueue1(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
                 }
             }
         }
     }
     
-    public static void changeQueue3(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart1, ArrayList<Process> ganttChart2, ArrayList<Process> ganttChart3, ArrayList<Integer> timeline1, ArrayList<Integer> timeline2, ArrayList<Integer> timeline3, int currentTime, int QTime, Process workingProcess) { 
+    public static void changeQueue3(ArrayList<Process> Queue1, ArrayList<Process> Queue2, ArrayList<Process> Queue3, ArrayList<Process> ganttChart, ArrayList<Integer> timeline, int currentTime, int QTime, Process workingProcess) { 
         if((Queue1.size() == 0) && (Queue2.size() == 0)) {
             Collections.sort(Queue3, new CompareByArrivalTime());
             Iterator<Process> Queue3Iterator = Queue3.iterator();
             while (Queue3Iterator.hasNext()) {
                 Process p = Queue3Iterator.next();
                 currentTime += p.getBurstTime();
-                
-                Process empty = createEmptyProcess(p);
-                ganttChart1.add(empty);
-                ganttChart2.add(empty);
-                ganttChart3.add(p);
-                
-                timeline1.add(currentTime);
-                timeline2.add(currentTime);
-                timeline3.add(currentTime);
+                ganttChart.add(p);
+                timeline.add(currentTime);
                 Queue3Iterator.remove();
             }
             System.out.println("");
             System.out.println("************************************************************");
             System.out.println("*               Three-level Queue Scheduling               *");
             System.out.println("************************************************************");
-            printGanttChart(ganttChart1, timeline1);
-            System.out.println();
-            printGanttChart(ganttChart2, timeline2);
-            System.out.println();
-            printGanttChart(ganttChart3, timeline3);
+            printGanttChart(ganttChart, timeline);
         }
         else if((Queue1.size() == 0) && (Queue2.size() != 0)){
             //need cautious of preemptive
@@ -826,14 +834,9 @@ public class OperatingSystem {
             while (Queue3Iterator.hasNext()){ 
                 workingProcess = Queue3Iterator.next();
                 if((currentTime + workingProcess.getBurstTime()) < cutLineQueue2.getArrivalTime()) {
-                    Process empty = createEmptyProcess(workingProcess);
-                    ganttChart1.add(empty);
-                    ganttChart2.add(empty);
-                    ganttChart3.add(workingProcess);
+                    ganttChart.add(workingProcess);
                     currentTime += workingProcess.getBurstTime();
-                    timeline1.add(currentTime);
-                    timeline2.add(currentTime);
-                    timeline3.add(currentTime);
+                    timeline.add(currentTime);
                     Queue3Iterator.remove();
                 }
                 else {
@@ -845,14 +848,9 @@ public class OperatingSystem {
                     executedProcess.setProcessNum(workingProcess.getProcessNum());
                     executedProcess.setBurstTime(cutLineQueue2.getArrivalTime() - currentTime);
 
-                    Process empty = createEmptyProcess(executedProcess);
-                    ganttChart1.add(empty);
-                    ganttChart2.add(empty);
-                    ganttChart3.add(executedProcess);
+                    ganttChart.add(executedProcess);
                     currentTime = currentTime + executedProcess.getBurstTime();
-                    timeline1.add(currentTime);
-                    timeline2.add(currentTime);
-                    timeline3.add(currentTime);
+                    timeline.add(currentTime);
                     Queue3.remove(workingProcess);
 
                     leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -869,7 +867,7 @@ public class OperatingSystem {
             }
             Collections.sort(Queue3, new CompareByArrivalTime());
             
-            changeQueue2(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue2(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
 
         }
         else if((Queue1.size() != 0) && (Queue2.size() == 0)) {
@@ -879,14 +877,9 @@ public class OperatingSystem {
             while (Queue3Iterator.hasNext()){ 
                 workingProcess = Queue3Iterator.next();
                 if((currentTime + workingProcess.getBurstTime()) < cutLineQueue1.getArrivalTime()) {
-                    Process empty = createEmptyProcess(workingProcess);
-                    ganttChart1.add(empty);
-                    ganttChart2.add(empty);
-                    ganttChart3.add(workingProcess);
+                    ganttChart.add(workingProcess);
                     currentTime += workingProcess.getBurstTime();
-                    timeline1.add(currentTime);
-                    timeline2.add(currentTime);
-                    timeline3.add(currentTime);
+                    timeline.add(currentTime);
                     Queue3Iterator.remove();
                 }
                 else {
@@ -898,14 +891,9 @@ public class OperatingSystem {
                     executedProcess.setProcessNum(workingProcess.getProcessNum());
                     executedProcess.setBurstTime(cutLineQueue1.getArrivalTime() - currentTime);
 
-                    Process empty = createEmptyProcess(executedProcess);
-                    ganttChart1.add(empty);
-                    ganttChart2.add(empty);
-                    ganttChart3.add(executedProcess);
+                    ganttChart.add(executedProcess);
                     currentTime = currentTime + executedProcess.getBurstTime();
-                    timeline1.add(currentTime);
-                    timeline2.add(currentTime);
-                    timeline3.add(currentTime);
+                    timeline.add(currentTime);
                     Queue3.remove(workingProcess);
 
                     leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -921,7 +909,7 @@ public class OperatingSystem {
             }
             Collections.sort(Queue3, new CompareByArrivalTime());
 
-            changeQueue1(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+            changeQueue1(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
         }
         else if((Queue1.size() != 0) && (Queue2.size() != 0)) {
             Process compare1 = Queue1.get(0);
@@ -940,14 +928,9 @@ public class OperatingSystem {
                 while (Queue3Iterator.hasNext()){ 
                     workingProcess = Queue3Iterator.next();
                     if((currentTime + workingProcess.getBurstTime()) < cutLineQueue1.getArrivalTime()) {
-                        Process empty = createEmptyProcess(workingProcess);
-                        ganttChart1.add(empty);
-                        ganttChart2.add(empty);
-                        ganttChart3.add(workingProcess);
+                        ganttChart.add(workingProcess);
                         currentTime += workingProcess.getBurstTime();
-                        timeline1.add(currentTime);
-                        timeline2.add(currentTime);
-                        timeline3.add(currentTime);
+                        timeline.add(currentTime);
                         Queue3Iterator.remove();
                     }
                     else {
@@ -960,14 +943,9 @@ public class OperatingSystem {
                         executedProcess.setProcessNum(workingProcess.getProcessNum());
                         executedProcess.setBurstTime(cutLineQueue1.getArrivalTime() - currentTime);
 
-                        Process empty = createEmptyProcess(executedProcess);
-                        ganttChart1.add(empty);
-                        ganttChart2.add(empty);
-                        ganttChart3.add(executedProcess);
+                        ganttChart.add(executedProcess);
                         currentTime = currentTime + executedProcess.getBurstTime();
-                        timeline1.add(currentTime);
-                        timeline2.add(currentTime);
-                        timeline3.add(currentTime);
+                        timeline.add(currentTime);
                         Queue3.remove(workingProcess);
 
                         leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -983,7 +961,7 @@ public class OperatingSystem {
                 }
                 Collections.sort(Queue3, new CompareByArrivalTime());
                 
-                changeQueue1(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+                changeQueue1(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
             }
             else if(min == compare2) {
                 Process cutLineQueue2 = Queue2.get(0);
@@ -994,14 +972,9 @@ public class OperatingSystem {
                     workingProcess = Queue3Iterator.next();
 
                     if((currentTime + workingProcess.getBurstTime()) < cutLineQueue2.getArrivalTime()) {
-                        Process empty = createEmptyProcess(workingProcess);
-                        ganttChart1.add(empty);
-                        ganttChart2.add(empty);
-                        ganttChart3.add(workingProcess);
+                        ganttChart.add(workingProcess);
                         currentTime += workingProcess.getBurstTime();
-                        timeline1.add(currentTime);
-                        timeline2.add(currentTime);
-                        timeline3.add(currentTime);
+                        timeline.add(currentTime);
                         Queue3Iterator.remove();
                     }
                     else {
@@ -1013,14 +986,9 @@ public class OperatingSystem {
                         executedProcess.setProcessNum(workingProcess.getProcessNum());
                         executedProcess.setBurstTime(cutLineQueue2.getArrivalTime() - currentTime);
 
-                        Process empty = createEmptyProcess(executedProcess);
-                        ganttChart1.add(empty);
-                        ganttChart2.add(empty);
-                        ganttChart3.add(executedProcess);
+                        ganttChart.add(executedProcess);
                         currentTime = currentTime + executedProcess.getBurstTime();
-                        timeline1.add(currentTime);
-                        timeline2.add(currentTime);
-                        timeline3.add(currentTime);
+                        timeline.add(currentTime);
                         Queue3.remove(workingProcess);
 
                         leftProcess.setArrivalTime(workingProcess.getArrivalTime());
@@ -1036,7 +1004,7 @@ public class OperatingSystem {
                 }
                 Collections.sort(Queue3, new CompareByArrivalTime());
 
-                changeQueue2(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+                changeQueue2(Queue1, Queue2, Queue3, ganttChart, timeline, currentTime, QTime, workingProcess);
             }
         }
     }
