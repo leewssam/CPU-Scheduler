@@ -1,14 +1,16 @@
 import java.util.*;
 import java.lang.Math.*;
 
-public class OperatingSystem {
-
+public class OperatingSystem{
+	
+	static int numOfProcess = 0;
+	static ArrayList<Integer>ArrivalTime = new ArrayList<Integer>();
+	static ArrayList<Integer>BurstTime = new ArrayList<Integer>();
     public static void main(String[] args) {
 
         Scanner input = new Scanner(System.in);
 
         //input table inputs
-        int numOfProcess = 0;
 
         do {
             System.out.print("Select the number of processes -> ");
@@ -46,6 +48,8 @@ public class OperatingSystem {
             } while (inputPriority < 1 || inputPriority > 6);
 
             String processNumToString = Integer.toString(i);
+			ArrivalTime.add(inputArrivalTime);
+			BurstTime.add(inputBurstTime);
             processList.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
             processListR.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
             processListS.add(new Process(processNumToString, inputArrivalTime, inputBurstTime, inputPriority));
@@ -69,7 +73,7 @@ public class OperatingSystem {
         System.out.println("| Process | Burst Time | Arrival Time | Priority |");
         System.out.println("|---------+------------+--------------+----------|");
 
-        for (int i = 0; i < t.size(); i++) { 
+        for (int i = 0; i < t.size(); i++) {
 
             //make up spaces for process
             System.out.format("| %-8s", "P" + t.get(i).getProcessNum());
@@ -90,8 +94,11 @@ public class OperatingSystem {
         }
     }//end of displayTable
 
-    public static void printGanttChart(ArrayList<Process> g, ArrayList<Integer> t) {
-
+    public static void printGanttChart(ArrayList<Process> g, ArrayList<Integer> t) 
+	{
+		ArrayList<Integer> emptynum = new ArrayList<Integer>();
+		ArrayList<Integer> processnum = new ArrayList<Integer>();
+		ArrayList<Integer> processint = new ArrayList<Integer>();
         System.out.print("+");
         for (int i = 0; i < g.size(); i++) {
             int space = g.get(i).getBurstTime() + 3;
@@ -109,7 +116,7 @@ public class OperatingSystem {
             }
         }
         System.out.print("+");
-        System.out.println();
+        System.out.println("");
         
         System.out.print("|");
         for (int i = 0; i < g.size(); i++) {
@@ -117,9 +124,11 @@ public class OperatingSystem {
             
             if(g.get(i).getProcessNum().equals("empty")) {
                 System.out.format((" %-" + space + "s "), " ");
+				emptynum.add(t.get(i));
             }
             else {
                 System.out.format((" %-" + space + "s "), "P" + g.get(i).getProcessNum());
+				processnum.add(Integer.parseInt(g.get(i).getProcessNum()));
             }
             
             if(i < g.size()-1) {
@@ -132,6 +141,7 @@ public class OperatingSystem {
             }
             
         }
+		
         System.out.print("|");
         System.out.println();
 
@@ -158,20 +168,76 @@ public class OperatingSystem {
             if (i < t.size() - 1) {
                 int space = g.get(i).getBurstTime() + 4;
                 if(i == 0) {
+					processint.add(t.get(i));
                     System.out.format(("%-" + space + "s"), t.get(i));
                 }
                 else if(g.get(i-1).getProcessNum().equals("empty") && g.get(i).getProcessNum().equals("empty")) {
                     System.out.format(("%-" + space + "s"), " ");
                 }
                 else {
+										processint.add(t.get(i));
                     System.out.format(("%-" + space + "s"), t.get(i));
                 } 
             } 
             else {
+				processint.add(t.get(i));
                 System.out.print(t.get(i));
             }
         }
-        System.out.println();
+		
+			System.out.println("");	
+		System.out.println();
+		//processint.remove(0);
+		ArrayList<Integer> procorg = new ArrayList<Integer>();
+		ArrayList<Integer> compltime = new ArrayList<Integer>();
+		
+		for (int i=0; i< processint.size();i++)
+		{
+			for (int x=0;x<emptynum.size();x++)
+			{
+				if (processint.get(i)==emptynum.get(x))
+				{
+					processint.remove(i+1);
+				}
+			}
+		}
+		
+		if (processint.get(0)==0)
+		{
+			processint.remove(0);
+		}
+		
+		for (int i=0; i<numOfProcess;i++)
+		{
+			if(processnum.lastIndexOf(i)!=-1)
+			{
+			
+				int temp = processnum.lastIndexOf(i);
+				procorg.add(i);
+				compltime.add(processint.get(temp));
+			}
+		}
+		System.out.println("");
+		System.out.println("|---------|-----------------|--------------|");
+		System.out.println("| Process | Turnaround Time | Waiting Time |");
+		System.out.println("|---------|-----------------|--------------|");
+		Iterator processid = procorg.iterator();
+		Iterator processtime = compltime.iterator();
+		
+		while (processid.hasNext())
+		{
+			Object element = processid.next();
+			Object time = processtime.next();
+			int completetime = Integer.parseInt(time.toString());
+			int elementa = Integer.parseInt(element.toString());
+			System.out.format(("| P"+"%01d" + "      |" ),element);
+			int tt = completetime - ArrivalTime.get(elementa);
+			int wwt = tt - BurstTime.get(elementa);
+			System.out.printf( "%-17s" + "|", tt);
+			System.out.printf( "%-14s" + "|",wwt);
+			System.out.println("");			
+		}
+		System.out.println("|---------|-----------------|--------------|");
     }
 
     public static void RRWP(ArrayList<Process> processListR, int time) {
@@ -190,7 +256,6 @@ public class OperatingSystem {
         int currenttime = 0;
         do {
             timeline.add(currenttime);
-			
             if (currentProcess.getBurstTime() <= rrmax) {
                 currenttime = currenttime + currentProcess.getBurstTime();
                 ganttChart.add(currentProcess);
@@ -199,8 +264,7 @@ public class OperatingSystem {
                 } else if (queue.size() > 0) {
                     queue.remove(0);
                 }
-            } 
-			else {
+            } else {
                 currenttime = currenttime + rrmax;
                 Process executedProcess = new Process();
                 Process leftProcess = new Process();
@@ -219,6 +283,7 @@ public class OperatingSystem {
 
                 if (leftProcess.getBurstTime() > 0) {
                     queue.add(leftProcess);
+
                 }
 
                 if (processListR.get(0).getProcessNum() == currentProcess.getProcessNum()) {
@@ -226,41 +291,158 @@ public class OperatingSystem {
                 } else {
                     queue.remove(0);
                 }
-            }
-			for (int i=processListR.size()-1; i>=0;i--)
-			{
-				if (processListR.get(i).getArrivalTime()<currenttime)
-				{
-					queue.add(processListR.get(i));
-					processListR.remove(i);
-				}
-			}
-			
-            if (queue.size() > 0) 
+            }//end of else
+            if (queue.size() > 0 && processListR.size() > 0) 
             {
                 Collections.sort(queue, new CompareByPriority()); //sort prcoessList by arrivaltime first then only priority
+                    if (processListR.get(0).getArrivalTime()<=currenttime)
+                    {
+						if (queue.get(0).getPriority() < processListR.get(0).getPriority()) 
+                            {
+                                    timeline.add(currenttime);
+                                    if (queue.get(0).getBurstTime() <= rrmax) {
+                                            currenttime = queue.get(0).getBurstTime() + currenttime;
+                                            ganttChart.add(queue.get(0));
+                                    } else {
+                                            Process executedProcess = new Process();
+                                            Process leftProcess = new Process();
+
+                                            currenttime = currenttime + rrmax;
+                                            executedProcess.setProcessNum(queue.get(0).getProcessNum());
+                                            executedProcess.setArrivalTime(queue.get(0).getArrivalTime());
+                                            executedProcess.setPriority(queue.get(0).getPriority());
+                                            executedProcess.setBurstTime(rrmax);
+                                            ganttChart.add(executedProcess);
+
+                                            leftProcess.setProcessNum(queue.get(0).getProcessNum());
+                                            leftProcess.setArrivalTime(currenttime);
+                                            leftProcess.setPriority(queue.get(0).getPriority());
+                                            leftProcess.setBurstTime(queue.get(0).getBurstTime() - rrmax);
+                                            queue.add(leftProcess);
+                                    }
+                                    queue.remove(0);
+                                    if (queue.size() >= 1) {
+                                            if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+                                                    if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+                                                            currentProcess = processListR.get(0);
+                                                    } else {
+                                                            currentProcess = queue.get(0);
+                                                    }
+                                            } else if (queue.get(0).getArrivalTime() <= currenttime) {
+                                                    currentProcess = queue.get(0);
+                                            }
+                                    } else {
+                                            currentProcess = processListR.get(0);
+                                    }
+                            } 
+                            else if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) 
+                            {
+                                    timeline.add(currenttime);
+                                    if (processListR.get(0).getBurstTime() <= rrmax) 
+                                    {
+                                            currenttime = processListR.get(0).getBurstTime() + currenttime;
+                                            ganttChart.add(processListR.get(0));
+                                            processListR.remove(0);
+                                    } else 
+                                    {
+                                            Process executedProcess = new Process();
+                                            Process leftProcess = new Process();
+
+                                            currenttime = currenttime + rrmax;
+                                            executedProcess.setProcessNum(processListR.get(0).getProcessNum());
+                                            executedProcess.setArrivalTime(processListR.get(0).getArrivalTime());
+                                            executedProcess.setPriority(processListR.get(0).getPriority());
+                                            executedProcess.setBurstTime(rrmax);
+                                            ganttChart.add(executedProcess);
+
+                                            leftProcess.setProcessNum(processListR.get(0).getProcessNum());
+                                            leftProcess.setArrivalTime(currenttime);
+                                            leftProcess.setPriority(processListR.get(0).getPriority());
+                                            leftProcess.setBurstTime(processListR.get(0).getBurstTime() - rrmax);
+                                            processListR.remove(0);
+                                            queue.add(leftProcess);
+                                    }
+                                    if (queue.size() >= 1 && processListR.size() >= 1) 
+                                    {
+                                            Collections.sort(queue, new CompareByPriority()); //sort prcoessList by arrivaltime first then only priority
+                                            if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+                                                    if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+                                                            currentProcess = processListR.get(0);
+                                                    } else 
+                                                    {
+
+                                                            currentProcess = queue.get(0);
+                                                    }
+                                            } 
+                                            else if (queue.get(0).getArrivalTime() <= currenttime) 
+                                            {
+                                                    currentProcess = queue.get(0);
+                                            }
+                                    } 
+                                    else if (queue.size() > 0 && processListR.size() == 0) 
+                                    {
+                                            currentProcess = queue.get(0);
+                                    } 
+                                    else {
+                                            currentProcess = processListR.get(0);
+                                    }
+                            }
+                    }
+                    else{
+                            timeline.add(currenttime);
+                            if (queue.get(0).getBurstTime() <= rrmax) {
+                                    currenttime = queue.get(0).getBurstTime() + currenttime;
+                                    ganttChart.add(queue.get(0));
+                            } 
+
+                            else 
+                            {
+                                    Process executedProcess = new Process();
+                                    Process leftProcess = new Process();
+
+                                    currenttime = currenttime + rrmax;
+                                    executedProcess.setProcessNum(queue.get(0).getProcessNum());
+                                    executedProcess.setArrivalTime(queue.get(0).getArrivalTime());
+                                    executedProcess.setPriority(queue.get(0).getPriority());
+                                    executedProcess.setBurstTime(rrmax);
+                                    ganttChart.add(executedProcess);
+
+                                    leftProcess.setProcessNum(queue.get(0).getProcessNum());
+                                    leftProcess.setArrivalTime(currenttime);
+                                    leftProcess.setPriority(queue.get(0).getPriority());
+                                    leftProcess.setBurstTime(queue.get(0).getBurstTime() - rrmax);
+                                    queue.add(leftProcess);
+                            }
+                            queue.remove(0);
+                            if (queue.size() >= 1) {
+                                    if (queue.get(0).getArrivalTime() <= currenttime && processListR.get(0).getArrivalTime() <= currenttime) {
+                                            if (queue.get(0).getPriority() >= processListR.get(0).getPriority()) {
+                                                    currentProcess = processListR.get(0);
+                                            } else {
+                                                    currentProcess = queue.get(0);
+                                            }
+                                    } else if (queue.get(0).getArrivalTime() <= currenttime) {
+                                            currentProcess = queue.get(0);
+                                    }
+                            } else {
+                                    currentProcess = processListR.get(0);
+                            }
+                    }
 				
-            } 
-			if (queue.size() == 0 && processListR.size() > 0) {
+            } else if (queue.size() == 0 && processListR.size() > 0) {
                 currentProcess = processListR.get(0);
             }
-			
-			else if (queue.size()>0 && processListR.size()>0){
-				currentProcess = queue.get(0);
-			}
         } while (processListR.size() > 0);
         //displayTable(processListR);
         Collections.sort(queue, new CompareByPriority());
 		if (queue.size() >0)
 		{
         do {
-			
             timeline.add(currenttime);
             if (queue.get(0).getBurstTime() <= rrmax) {
                 currenttime = queue.get(0).getBurstTime() + currenttime;
                 ganttChart.add(queue.get(0));
                 queue.remove(0);
-				Collections.sort(queue, new CompareByPriority());
             } else {
                 Process executedProcess = new Process();
                 Process leftProcess = new Process();
@@ -279,7 +461,6 @@ public class OperatingSystem {
 
                 queue.add(leftProcess);
                 queue.remove(0);
-				Collections.sort(queue, new CompareByPriority());
 			}
         } while (queue.size() != 0);
 		}
@@ -698,6 +879,10 @@ public class OperatingSystem {
                     Queue.add(leftProcess);
                 }   
             }//End of Round Robin
+			if(Queue1.size() != 0 && Queue1.get(0).getArrivalTime() <= currentTime)
+			{
+                changeQueue1(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
+			}
         }
         
         changeQueue2(Queue1, Queue2, Queue3, ganttChart1, ganttChart2, ganttChart3, timeline1, timeline2, timeline3, currentTime, QTime, workingProcess);
